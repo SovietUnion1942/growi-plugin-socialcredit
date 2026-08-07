@@ -4,6 +4,7 @@
 import React from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { ReportForm } from './src/ReportForm';
+import { ViewerEmbed } from './src/ViewerEmbed';
 
 // フォームを表示する固定ページのパス。決まったら書き換える。
 const REPORT_FORM_PATH = '/社会信用体系';
@@ -86,7 +87,12 @@ async function mountForm() {
   if (root == null) {
     root = createRoot(container);
   }
-  root.render(<ReportForm />);
+  root.render(
+    <>
+      <ReportForm />
+      <ViewerEmbed />
+    </>,
+  );
 }
 
 function unmountForm() {
