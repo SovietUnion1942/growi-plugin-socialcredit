@@ -13,12 +13,65 @@ const MOUNT_ELEMENT_ID = 'growi-plugin-report-root';
 let root: Root | null = null;
 let observer: MutationObserver | null = null;
 
-function isReportPage(): boolean {
-  return decodeURIComponent(window.location.pathname) === REPORT_FORM_PATH;
+// GROWI v5以降、閲覧中のURLは常にページID形式のパーマリンク
+// (例: /6a757f9ad0602496c26168fd)になる。
+// そのため、パス文字列を直接 window.location.pathname と比較しても一致しない。
+// 対象パス(REPORT_FORM_PATH)に対応するページIDをAPIで取得し、
+// 現在のURLのIDと比較する方式に変更する。
+
+let cachedTargetPageId: string | null | undefined; // undefined = 未取得, null = 見つからなかった
+
+async function getTargetPageId(): Promise<string | null> {
+  if (cachedTargetPageId !== undefined) return cachedTargetPageId;
+  try {
+    const res = await fetch(
+      `/_api/v3/page?path=${encodeURIComponent(REPORT_FORM_PATH)}`,
+      { credentials: 'include' },
+    );
+    if (!res.ok) {
+      console.warn('[growi-plugin-report] target page not found yet (status', res.status, ')');
+      cachedTargetPageId = null;
+      return null;
+    }
+    const data = await res.json();
+    const id: string | undefined = data?.page?._id ?? data?.page?.id;
+    cachedTargetPageId = id ?? null;
+    console.log('[growi-plugin-report] target page id:', cachedTargetPageId);
+    return cachedTargetPageId;
+  } catch (err) {
+    console.error('[growi-plugin-report] getTargetPageId failed:', err);
+    cachedTargetPageId = null;
+    return null;
+  }
 }
 
-function mountForm() {
-  if (!isReportPage()) return;
+function extractCurrentPageIdFromUrl(): string | null {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const last = segments[segments.length - 1];
+  // MongoDBのObjectId形式(24桁の16進数)かどうかを簡易チェック
+  if (last != null && /^[0-9a-fA-F]{24}$/.test(last)) {
+    return last;
+  }
+  return null;
+}
+
+async function isReportPage(): Promise<boolean> {
+  // 保険として、万が一パス形式のURLで表示された場合にも対応する
+  if (decodeURIComponent(window.location.pathname) === REPORT_FORM_PATH) {
+    return true;
+  }
+
+  const currentId = extractCurrentPageIdFromUrl();
+  if (currentId == null) return false;
+
+  const targetId = await getTargetPageId();
+  if (targetId == null) return false;
+
+  return currentId === targetId;
+}
+
+async function mountForm() {
+  if (!(await isReportPage())) return;
 
   let container = document.getElementById(MOUNT_ELEMENT_ID);
   if (container == null) {
@@ -45,8 +98,8 @@ function unmountForm() {
   container?.remove();
 }
 
-function handleRouteChange() {
-  if (isReportPage()) {
+async function handleRouteChange() {
+  if (await isReportPage()) {
     mountForm();
   } else {
     unmountForm();
@@ -69,8 +122,8 @@ const activate = (): void => {
   window.addEventListener('popstate', handleRouteChange);
 
   // 保険として、本文コンテナの差し替えをMutationObserverでも検知する
-  observer = new MutationObserver(() => {
-    if (isReportPage() && document.getElementById(MOUNT_ELEMENT_ID) == null) {
+  observer = new MutationObserver(async () => {
+    if (document.getElementById(MOUNT_ELEMENT_ID) == null && (await isReportPage())) {
       mountForm();
     }
   });
