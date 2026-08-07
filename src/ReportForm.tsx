@@ -40,7 +40,7 @@ async function submitReport(params: {
       return { ok: false, message: errBody.error ?? `送信に失敗しました (${res.status})` };
     }
 
-    return { ok: true, message: '申し立てを送信しました' };
+    return { ok: true, message: '申請を送信しました' };
   } catch (err) {
     console.error('[growi-plugin-report] submitReport failed:', err);
     return { ok: false, message: 'APIサーバーに接続できませんでした' };
@@ -94,7 +94,7 @@ export function ReportForm() {
 
   return (
     <div className="growi-plugin-report-form" style={{ maxWidth: 560, margin: '0 auto' }}>
-      <h2>信用申し立てフォーム</h2>
+      <h2>社会信用体系</h2>
 
       <p>
         申し立て人:{' '}
@@ -115,7 +115,7 @@ export function ReportForm() {
         </div>
 
         <div className="form-group mb-3">
-          <label htmlFor="content">申し立て内容</label>
+          <label htmlFor="content">申請内容</label>
           <textarea
             id="content"
             className="form-control"
@@ -127,7 +127,7 @@ export function ReportForm() {
         </div>
 
         <button type="submit" className="btn btn-primary" disabled={state === 'submitting'}>
-          {state === 'submitting' ? '送信中...' : '申し立てを送信'}
+          {state === 'submitting' ? '送信中...' : '申請を送信'}
         </button>
       </form>
 

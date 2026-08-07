@@ -1,7 +1,7 @@
 {
   "name": "growi-plugin-socialcredit",
   "version": "1.0.0",
-  "description": "Report (credit system) plugin for GROWI",
+  "description": "Social Credit plugin for GROWI",
   "type": "module",
   "keywords": ["growi", "growi-plugin"],
   "scripts": {
