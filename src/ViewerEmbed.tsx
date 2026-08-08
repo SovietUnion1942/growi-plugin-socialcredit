@@ -2,8 +2,8 @@
 // 対象者向け確認・反論サイトをiframeで埋め込む(埋め込み不可ならリンクにフォールバック)
 import React, { useState } from 'react';
 
-// report-viewer-site のURL(開発中はローカル)
-const VIEWER_URL = 'http://localhost:5174';
+// report-viewer-site のURL
+const VIEWER_URL = 'https://socialcredit.butsuri-kori.club';
 
 export function ViewerEmbed() {
   const [embedFailed, setEmbedFailed] = useState(false);
